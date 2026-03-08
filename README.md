@@ -1,33 +1,82 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# 沼タイマー (Numa Timer)
 
-## Getting Started
+YouTube / X を見ている時間を、ドメインごとに「今日どれだけ使ったか」で可視化する Chrome 拡張です。
 
-First, run the development server:
+> [!WARNING]
+> この拡張は Chrome ウェブストア未公開です。ローカルでビルドして読み込んでください。
+
+## できること
+
+- YouTube / X の当日利用時間を秒単位で計測
+- ドメインごとに `popup` から計測 ON/OFF
+- 計測中のページ右上にタイマー表示
+- 表示カードの折りたたみ（カウンターのみ表示）
+
+## 対象ドメイン
+
+- `https://youtube.com/*`
+- `https://*.youtube.com/*`
+- `https://x.com/*`
+- `https://*.x.com/*`
+
+## セットアップ
+
+### 前提
+
+- `node` 20.12.2
+- `pnpm` 9.12.3
+
+`mise` を使う場合:
+
+```bash
+mise install
+```
+
+### 依存インストール
+
+```bash
+pnpm install
+```
+
+### 開発ビルド
 
 ```bash
 pnpm dev
-# or
-npm run dev
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
-
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
-
-## Making production build
-
-Run the following:
+### 本番ビルド
 
 ```bash
 pnpm build
-# or
-npm run build
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+## Chrome への読み込み
 
-## Submit to the webstores
+1. `chrome://extensions` を開く
+2. 右上の「デベロッパー モード」を ON
+3. 「パッケージ化されていない拡張機能を読み込む」を選択
+4. 開発時は `build/chrome-mv3-dev`、本番ビルドは `build/chrome-mv3-prod` を指定
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+## 使い方
+
+1. 拡張の popup を開く
+2. YouTube / X のスイッチで計測対象を切り替える
+3. 対象ドメインを開くと、右上に `Numa Timer · <Domain>` が表示される
+4. ヘッダー右のアイコンで折りたたみ/展開
+
+## 計測仕様（現時点）
+
+- 計測するのは「タブが表示中」かつ「そのタブにフォーカスがある」時間
+- ドメインが OFF のときは、計測も表示も行わない
+- 日付が変わると当日カウンタは自動でリセット
+- セッション単位キーで保存し、30日より古いセッションキーは定期削除
+
+## データ保存
+
+- 設定キー: `numa-timer:settings:v1`
+- 日次セッションキー: `numa-timer:daily-session:v1:<YYYY-MM-DD>:<domain>:<sessionId>`
+- 保存先: `chrome.storage.local`（`@plasmohq/storage`）
+
+## 今後
+
+- 統計情報ページ（履歴/傾向の可視化）は feature work として今後追加予定
