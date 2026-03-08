@@ -3,7 +3,8 @@
 YouTube / X を見ている時間を、ドメインごとに「今日どれだけ使ったか」で可視化する Chrome 拡張です。
 
 > [!WARNING]
-> この拡張は Chrome ウェブストア未公開です。ローカルでビルドして読み込んでください。
+> この拡張きのうは Chrome ウェブストア未公開です。
+> ローカルビルド、または GitHub Actions Artifact から取得したファイルを読み込んでください。
 
 ## できること
 
@@ -50,12 +51,24 @@ pnpm dev
 pnpm build
 ```
 
-## Chrome への読み込み
+## 拡張機能の読み込み
 
-1. `chrome://extensions` を開く
-2. 右上の「デベロッパー モード」を ON
-3. 「パッケージ化されていない拡張機能を読み込む」を選択
-4. 開発時は `build/chrome-mv3-dev`、本番ビルドは `build/chrome-mv3-prod` を指定
+### GitHub Actions Artifact から読み込む
+
+1. Actions の `Build Extension Artifact` 実行結果から Artifact をダウンロード
+2. ダウンロードした Artifact を展開し、中にある `numa-timer-v<version>-<sha>.zip` をさらに展開
+4. [`chrome://extensions/`](chrome://extensions/) を開く
+5. 右上の「デベロッパー モード」を ON
+6. 「パッケージ化されていない拡張機能を読み込む」から展開した `numa-timer-v<version>-<sha>` フォルダを選択
+
+### ローカルビルドから読み込む
+
+1. `pnpm dev` または `pnpm build` を実行
+2. [`chrome://extensions/`](chrome://extensions/) を開く
+3. 右上の「デベロッパー モード」を ON
+4. 「パッケージ化されていない拡張機能を読み込む」を選択
+5. 開発時は `build/chrome-mv3-dev`、本番ビルド時は `build/chrome-mv3-prod` を指定
+
 
 ## 使い方
 
