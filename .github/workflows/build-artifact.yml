@@ -8,11 +8,13 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      zip_name: ${{ steps.meta.outputs.zip_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,14 +56,24 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  publish-main-latest:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.zip_name }}
+          path: dist
+
       - name: Prepare rolling release asset
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          mkdir -p dist
-          cp build/chrome-mv3-prod.zip dist/numa-timer-main-latest.zip
+          cp dist/chrome-mv3-prod.zip dist/numa-timer-main-latest.zip
 
       - name: Update rolling release for main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: main-latest
