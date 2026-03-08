@@ -12,13 +12,44 @@ import {
   localAreaStorage,
   normalizeSettings,
   resolveDomainFromHostname,
-  SETTINGS_STORAGE_KEY
+  SETTINGS_STORAGE_KEY,
+  type DomainKey
 } from "~lib/numa-timer"
 
 const TICK_MS = 1_000
 const FLUSH_THRESHOLD_MS = 10_000
 const toSafeSeconds = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0
+const DOMAIN_THEME: Record<
+  DomainKey,
+  {
+    background: string
+    border: string
+    subText: string
+    shadow: string
+    toggleBorder: string
+    toggleBackground: string
+  }
+> = {
+  youtube: {
+    background:
+      "linear-gradient(160deg, rgba(69, 10, 10, 0.96) 0%, rgba(127, 29, 29, 0.93) 55%, rgba(40, 10, 10, 0.96) 100%)",
+    border: "1px solid rgba(248, 113, 113, 0.6)",
+    subText: "#fecaca",
+    shadow: "0 10px 30px rgba(127, 29, 29, 0.45)",
+    toggleBorder: "1px solid rgba(254, 202, 202, 0.35)",
+    toggleBackground: "rgba(127, 29, 29, 0.35)"
+  },
+  x: {
+    background:
+      "linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 55%, rgba(2, 6, 23, 0.95) 100%)",
+    border: "1px solid rgba(148, 163, 184, 0.45)",
+    subText: "#dbeafe",
+    shadow: "0 10px 30px rgba(2, 6, 23, 0.45)",
+    toggleBorder: "1px solid rgba(255, 255, 255, 0.25)",
+    toggleBackground: "rgba(0, 0, 0, 0.25)"
+  }
+}
 
 export const config: PlasmoCSConfig = {
   matches: [
@@ -170,6 +201,7 @@ const NumaTimer = () => {
   }, [flushSeconds, isEnabled])
 
   if (!domain || !isEnabled) return null
+  const theme = DOMAIN_THEME[domain]
 
   return (
     <div
@@ -181,14 +213,13 @@ const NumaTimer = () => {
         width: isCollapsed ? "auto" : "280px",
         padding: isCollapsed ? "10px 12px" : "14px 16px",
         borderRadius: "14px",
-        background:
-          "linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 55%, rgba(2, 6, 23, 0.95) 100%)",
+        background: theme.background,
         color: "#ffffff",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
         fontSize: "13px",
         lineHeight: 1.35,
-        border: "1px solid rgba(148, 163, 184, 0.45)",
-        boxShadow: "0 10px 30px rgba(2, 6, 23, 0.45)"
+        border: theme.border,
+        boxShadow: theme.shadow
       }}>
       <div
         style={{
@@ -208,14 +239,14 @@ const NumaTimer = () => {
           title={isCollapsed ? "Open" : "Collapse"}
           style={{
             cursor: "pointer",
-            border: "1px solid rgba(255,255,255,0.25)",
+            border: theme.toggleBorder,
             borderRadius: "8px",
             width: "24px",
             height: "24px",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "rgba(0,0,0,0.25)",
+            background: theme.toggleBackground,
             color: "#fff",
             padding: 0
           }}>
@@ -246,7 +277,12 @@ const NumaTimer = () => {
         </div>
       ) : (
         <>
-          <div style={{ marginTop: "8px", fontSize: "14px", color: "#dbeafe" }}>
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "14px",
+              color: theme.subText
+            }}>
             今日 {DOMAIN_LABEL[domain]} で使った時間
           </div>
           <div
@@ -258,7 +294,12 @@ const NumaTimer = () => {
             }}>
             {formatDuration(displaySeconds)}
           </div>
-          <div style={{ marginTop: "8px", fontSize: "14px", color: "#dbeafe" }}>
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "14px",
+              color: theme.subText
+            }}>
             この時間はもう戻りません
           </div>
         </>
