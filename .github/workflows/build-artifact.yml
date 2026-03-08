@@ -8,7 +8,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -46,15 +46,31 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "zip_name=${ZIP_NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Rename zip for artifact
-        run: |
-          mkdir -p dist
-          cp build/chrome-mv3-prod.zip "dist/${{ steps.meta.outputs.zip_name }}"
-
       - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.meta.outputs.zip_name }}
-          path: dist/${{ steps.meta.outputs.zip_name }}
+          path: build/chrome-mv3-prod.zip
           if-no-files-found: error
           retention-days: 14
+
+      - name: Prepare rolling release asset
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p dist
+          cp build/chrome-mv3-prod.zip dist/numa-timer-main-latest.zip
+
+      - name: Update rolling release for main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: main-latest
+          name: main-latest
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          make_latest: false
+          body: |
+            Rolling release updated from `main`.
+            Commit: `${{ github.sha }}`
+          files: dist/numa-timer-main-latest.zip
+          overwrite_files: true
