@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react"
+import { useCallback, useRef } from "react"
 
 import {
   DOMAIN_LABEL,
@@ -56,7 +56,7 @@ export const NumaTimer = ({
   const { displaySeconds } = useTimer(domain)
   const theme = DOMAIN_THEME[domain]
   const isCollapsed = uiState.collapsed[domain]
-  const reminderMessage = useMemo(() => pickReminderMessage(), [])
+  const reminderMessageRef = useRef(pickReminderMessage())
 
   const handleToggleCollapsed = useCallback(() => {
     void setUiState((prev) => ({
@@ -163,7 +163,7 @@ export const NumaTimer = ({
               fontSize: "14px",
               color: theme.subText
             }}>
-            {reminderMessage}
+            {reminderMessageRef.current}
           </div>
         </>
       )}
