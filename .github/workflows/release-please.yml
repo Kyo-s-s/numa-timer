@@ -17,6 +17,5 @@ jobs:
       - name: Run Release Please
         uses: googleapis/release-please-action@v4
         with:
-          release-type: node
-          package-name: numa-timer
+          config-file: release-please-config.json
           target-branch: main
