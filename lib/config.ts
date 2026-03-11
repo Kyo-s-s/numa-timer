@@ -37,15 +37,6 @@ export const DEFAULT_UI_STATE: NumaTimerUiState = {
   }
 }
 
-export const normalizeUiState = (
-  uiState?: Partial<NumaTimerUiState>
-): NumaTimerUiState => ({
-  collapsed: {
-    youtube: uiState?.collapsed?.youtube ?? DEFAULT_UI_STATE.collapsed.youtube,
-    x: uiState?.collapsed?.x ?? DEFAULT_UI_STATE.collapsed.x
-  }
-})
-
 export const localAreaStorage = new Storage({ area: "local" })
 
 const pad2 = (value: number) => value.toString().padStart(2, "0")
@@ -76,17 +67,6 @@ export const resolveDomainFromHostname = (
 
   return undefined
 }
-
-export const normalizeSettings = (
-  settings?: NumaTimerSettings
-): NumaTimerSettings => ({
-  enabledDomains: {
-    youtube:
-      settings?.enabledDomains?.youtube ??
-      DEFAULT_SETTINGS.enabledDomains.youtube,
-    x: settings?.enabledDomains?.x ?? DEFAULT_SETTINGS.enabledDomains.x
-  }
-})
 
 export const buildDailyTotalKey = (dateKey: string, domain: DomainKey) =>
   `${DAILY_TOTAL_STORAGE_PREFIX}:${dateKey}:${domain}`

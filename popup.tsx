@@ -1,16 +1,11 @@
 import type { CSSProperties } from "react"
 
-import { useStorage } from "@plasmohq/storage/hook"
-
 import {
-  DEFAULT_SETTINGS,
   DOMAIN_LABEL,
   DOMAIN_ORDER,
-  localAreaStorage,
-  normalizeSettings,
-  SETTINGS_STORAGE_KEY,
   type DomainKey
-} from "~lib/numa-timer"
+} from "~lib/config"
+import { useSettings } from "~hooks/useSettings"
 
 const panelStyle: CSSProperties = {
   padding: "16px",
@@ -33,20 +28,13 @@ const rowStyle: CSSProperties = {
 }
 
 function IndexPopup() {
-  const [settings, setSettings, { isLoading }] = useStorage(
-    { key: SETTINGS_STORAGE_KEY, instance: localAreaStorage },
-    DEFAULT_SETTINGS
-  )
-
-  const normalized = normalizeSettings(settings)
+  const { settings, setSettings, isLoading } = useSettings()
 
   const onToggle = async (domain: DomainKey) => {
     await setSettings((currentSettings) => {
-      const baseSettings = normalizeSettings(currentSettings)
       return {
         enabledDomains: {
-          ...baseSettings.enabledDomains,
-          [domain]: !baseSettings.enabledDomains[domain]
+          [domain]: !currentSettings.enabledDomains[domain]
         }
       }
     })
@@ -66,7 +54,7 @@ function IndexPopup() {
           </span>
           <input
             type="checkbox"
-            checked={normalized.enabledDomains[domain]}
+            checked={settings.enabledDomains[domain]}
             onChange={() => void onToggle(domain)}
             disabled={isLoading}
             aria-label={`${DOMAIN_LABEL[domain]} timer switch`}
