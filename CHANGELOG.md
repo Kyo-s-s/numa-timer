@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Kyo-s-s/numa-timer/compare/numa-timer-v0.1.1...numa-timer-v0.1.2) (2026-03-11)
+
+
+### Features
+
+* Randomize reminder messages ([#21](https://github.com/Kyo-s-s/numa-timer/issues/21)) ([50a63dc](https://github.com/Kyo-s-s/numa-timer/commit/50a63dcae890a6d2092908d45549eca991e5e7a2))
+
 ## [0.1.1](https://github.com/Kyo-s-s/numa-timer/compare/numa-timer-v0.1.0...numa-timer-v0.1.1) (2026-03-11)
 
 
