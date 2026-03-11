@@ -49,14 +49,14 @@ export const NumaTimer = ({
   uiState: NumaTimerUiState
   setUiState: (
     updater: (current: NumaTimerUiState) => DeepPartial<NumaTimerUiState>
-  ) => void
+  ) => Promise<void>
 }) => {
   const { displaySeconds } = useTimer(domain)
   const theme = DOMAIN_THEME[domain]
   const isCollapsed = uiState.collapsed[domain]
 
   const handleToggleCollapsed = useCallback(() => {
-    setUiState((prev) => ({
+    void setUiState((prev) => ({
       collapsed: {
         [domain]: !prev.collapsed[domain]
       }

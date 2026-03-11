@@ -26,6 +26,9 @@ export const useSettings = () => {
   return {
     isLoading,
     setSettings,
-    settings: deepMerge(DEFAULT_SETTINGS, (rawSettings ?? {}) as NumaTimerSettings)
+    settings: deepMerge(
+      DEFAULT_SETTINGS,
+      (rawSettings ?? {}) as NumaTimerSettings
+    )
   }
 }

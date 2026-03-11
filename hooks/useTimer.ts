@@ -30,10 +30,11 @@ export const useTimer = (domain: DomainKey) => {
     0
   )
 
-  const flushSeconds = useCallback(async () => {
+  const flushSeconds = useCallback(async (snapshotSeconds?: number) => {
     if (flushInProgressRef.current) return
 
-    const wholeSeconds = Math.floor(unsavedMsRef.current / 1000)
+    const wholeSeconds =
+      snapshotSeconds ?? Math.floor(unsavedMsRef.current / 1000)
     if (wholeSeconds <= 0) return
 
     flushInProgressRef.current = true
@@ -43,11 +44,14 @@ export const useTimer = (domain: DomainKey) => {
         const safeValue = toSafeSeconds(currentValue)
         return safeValue + wholeSeconds
       })
-      unsavedMsRef.current -= wholeSeconds * 1000
-      storedDailySecondsRef.current += wholeSeconds
-      setDisplaySeconds(
-        storedDailySecondsRef.current + Math.floor(unsavedMsRef.current / 1000)
-      )
+      if (snapshotSeconds === undefined) {
+        unsavedMsRef.current -= wholeSeconds * 1000
+        storedDailySecondsRef.current += wholeSeconds
+        setDisplaySeconds(
+          storedDailySecondsRef.current +
+            Math.floor(unsavedMsRef.current / 1000)
+        )
+      }
     } finally {
       flushInProgressRef.current = false
     }
@@ -69,7 +73,8 @@ export const useTimer = (domain: DomainKey) => {
 
       const nextDateKey = getDateKey(new Date(nowMs))
       if (nextDateKey !== dateKey) {
-        void flushSeconds()
+        const pendingSeconds = Math.floor(unsavedMsRef.current / 1000)
+        void flushSeconds(pendingSeconds)
         unsavedMsRef.current = 0
         storedDailySecondsRef.current = 0
         setDisplaySeconds(0)

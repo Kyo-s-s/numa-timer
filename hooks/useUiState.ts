@@ -26,6 +26,9 @@ export const useUiState = () => {
   return {
     isLoading,
     setUiState,
-    uiState: deepMerge(DEFAULT_UI_STATE, (rawUiState ?? {}) as NumaTimerUiState)
+    uiState: deepMerge(
+      DEFAULT_UI_STATE,
+      (rawUiState ?? {}) as NumaTimerUiState
+    )
   }
 }
