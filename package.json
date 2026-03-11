@@ -1,7 +1,7 @@
 {
   "name": "numa-timer",
   "displayName": "Numa Timer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "YouTube と X をドメイン別に計測し、表示中かつフォーカス中の当日利用時間を可視化する拡張機能。",
   "author": "Kyo-s-s",
   "scripts": {
