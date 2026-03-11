@@ -17,11 +17,13 @@ const toSafeSeconds = (value: unknown) =>
 
 export const useTimer = (domain: DomainKey) => {
   const [dateKey, setDateKey] = useState(() => getDateKey())
+  const dateKeyRef = useRef(dateKey)
   const lastTickMsRef = useRef(Date.now())
   const unsavedMsRef = useRef(0)
-  const flushInProgressRef = useRef(false)
   const storedDailySecondsRef = useRef(0)
   const [displaySeconds, setDisplaySeconds] = useState(0)
+  const flushPromiseRef = useRef<Promise<void>>(Promise.resolve())
+  const isMountedRef = useRef(true)
 
   const dailyTotalStorageKey = buildDailyTotalKey(dateKey, domain)
 
@@ -30,32 +32,47 @@ export const useTimer = (domain: DomainKey) => {
     0
   )
 
-  const flushSeconds = useCallback(async (snapshotSeconds?: number) => {
-    if (flushInProgressRef.current) return
+  const scheduleFlush = useCallback(
+    (
+      snapshotSeconds: number,
+      updateDisplay: boolean,
+      snapshotDateKey: string
+    ) => {
+      if (snapshotSeconds <= 0) return
+      flushPromiseRef.current = flushPromiseRef.current
+        .catch(() => {})
+        .then(async () => {
+          await setDailyTotalSeconds((currentValue) => {
+            const safeValue = toSafeSeconds(currentValue)
+            return safeValue + snapshotSeconds
+          })
+          if (!updateDisplay) return
+          if (dateKeyRef.current !== snapshotDateKey) return
+          const subtractMs = Math.min(
+            unsavedMsRef.current,
+            snapshotSeconds * 1000
+          )
+          unsavedMsRef.current -= subtractMs
+          storedDailySecondsRef.current += snapshotSeconds
+          if (isMountedRef.current) {
+            setDisplaySeconds(
+              storedDailySecondsRef.current +
+                Math.floor(unsavedMsRef.current / 1000)
+            )
+          }
+        })
+    },
+    [setDailyTotalSeconds]
+  )
 
-    const wholeSeconds =
-      snapshotSeconds ?? Math.floor(unsavedMsRef.current / 1000)
-    if (wholeSeconds <= 0) return
-
-    flushInProgressRef.current = true
-
-    try {
-      await setDailyTotalSeconds((currentValue) => {
-        const safeValue = toSafeSeconds(currentValue)
-        return safeValue + wholeSeconds
-      })
-      if (snapshotSeconds === undefined) {
-        unsavedMsRef.current -= wholeSeconds * 1000
-        storedDailySecondsRef.current += wholeSeconds
-        setDisplaySeconds(
-          storedDailySecondsRef.current +
-            Math.floor(unsavedMsRef.current / 1000)
-        )
-      }
-    } finally {
-      flushInProgressRef.current = false
-    }
-  }, [setDailyTotalSeconds])
+  const queueFlush = useCallback(
+    (snapshotSeconds?: number, updateDisplay = true) => {
+      const wholeSeconds =
+        snapshotSeconds ?? Math.floor(unsavedMsRef.current / 1000)
+      scheduleFlush(wholeSeconds, updateDisplay, dateKeyRef.current)
+    },
+    [scheduleFlush]
+  )
 
   useEffect(() => {
     const safeStoredSeconds = toSafeSeconds(storedDailySeconds)
@@ -66,6 +83,7 @@ export const useTimer = (domain: DomainKey) => {
   }, [storedDailySeconds])
 
   useEffect(() => {
+    dateKeyRef.current = dateKey
     const onTick = () => {
       const nowMs = Date.now()
       const deltaMs = Math.max(0, nowMs - lastTickMsRef.current)
@@ -74,7 +92,7 @@ export const useTimer = (domain: DomainKey) => {
       const nextDateKey = getDateKey(new Date(nowMs))
       if (nextDateKey !== dateKey) {
         const pendingSeconds = Math.floor(unsavedMsRef.current / 1000)
-        void flushSeconds(pendingSeconds)
+        queueFlush(pendingSeconds, false)
         unsavedMsRef.current = 0
         storedDailySecondsRef.current = 0
         setDisplaySeconds(0)
@@ -92,19 +110,19 @@ export const useTimer = (domain: DomainKey) => {
       )
 
       if (unsavedMsRef.current >= FLUSH_THRESHOLD_MS) {
-        void flushSeconds()
+        queueFlush()
       }
     }
 
     const onVisibilityChange = () => {
       if (document.visibilityState !== "visible") {
-        void flushSeconds()
+        queueFlush()
       }
       lastTickMsRef.current = Date.now()
     }
 
     const onBlur = () => {
-      void flushSeconds()
+      queueFlush()
       lastTickMsRef.current = Date.now()
     }
 
@@ -113,7 +131,7 @@ export const useTimer = (domain: DomainKey) => {
     }
 
     const onPageHide = () => {
-      void flushSeconds()
+      queueFlush()
     }
 
     const tickId = window.setInterval(onTick, TICK_MS)
@@ -125,15 +143,17 @@ export const useTimer = (domain: DomainKey) => {
     window.addEventListener("beforeunload", onPageHide)
 
     return () => {
+      isMountedRef.current = false
       window.clearInterval(tickId)
       document.removeEventListener("visibilitychange", onVisibilityChange)
       window.removeEventListener("blur", onBlur)
       window.removeEventListener("focus", onFocus)
       window.removeEventListener("pagehide", onPageHide)
       window.removeEventListener("beforeunload", onPageHide)
-      void flushSeconds()
+      const pendingSeconds = Math.floor(unsavedMsRef.current / 1000)
+      queueFlush(pendingSeconds, false)
     }
-  }, [dateKey, flushSeconds])
+  }, [dateKey, queueFlush])
 
   return { displaySeconds }
 }
