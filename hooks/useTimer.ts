@@ -75,6 +75,13 @@ export const useTimer = (domain: DomainKey) => {
   )
 
   useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
     const safeStoredSeconds = toSafeSeconds(storedDailySeconds)
     storedDailySecondsRef.current = safeStoredSeconds
     setDisplaySeconds(
@@ -143,7 +150,6 @@ export const useTimer = (domain: DomainKey) => {
     window.addEventListener("beforeunload", onPageHide)
 
     return () => {
-      isMountedRef.current = false
       window.clearInterval(tickId)
       document.removeEventListener("visibilitychange", onVisibilityChange)
       window.removeEventListener("blur", onBlur)

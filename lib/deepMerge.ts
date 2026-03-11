@@ -11,6 +11,9 @@ export const deepMerge = <T extends Record<string, unknown>>(
   base: T,
   override: DeepPartial<T>
 ): T => {
+  if (!isPlainObject(override)) {
+    return base
+  }
   const result: Record<string, unknown> = { ...base }
   for (const [key, value] of Object.entries(override)) {
     const baseValue = result[key]
