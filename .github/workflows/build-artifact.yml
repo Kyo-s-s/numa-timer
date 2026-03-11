@@ -6,6 +6,9 @@ on:
   push:
     branches:
       - main
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
@@ -86,3 +89,26 @@ jobs:
             Commit: `${{ github.sha }}`
           files: dist/numa-timer-main-latest.zip
           overwrite_files: true
+
+  publish-release:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.zip_name }}
+          path: dist
+
+      - name: Prepare release asset name
+        run: |
+          mv dist/chrome-mv3-prod.zip "dist/${{ needs.build.outputs.zip_name }}"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: dist/${{ needs.build.outputs.zip_name }}
