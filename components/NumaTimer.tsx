@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 
 import {
   DOMAIN_LABEL,
@@ -6,6 +6,7 @@ import {
   type DomainKey,
   type NumaTimerUiState
 } from "~lib/config"
+import { pickReminderMessage } from "~lib/messages"
 import { useTimer } from "~hooks/useTimer"
 import type { DeepPartial } from "~lib/deepMerge"
 
@@ -40,6 +41,7 @@ const DOMAIN_THEME: Record<
   }
 }
 
+
 export const NumaTimer = ({
   domain,
   uiState,
@@ -54,6 +56,7 @@ export const NumaTimer = ({
   const { displaySeconds } = useTimer(domain)
   const theme = DOMAIN_THEME[domain]
   const isCollapsed = uiState.collapsed[domain]
+  const reminderMessage = useMemo(() => pickReminderMessage(), [])
 
   const handleToggleCollapsed = useCallback(() => {
     void setUiState((prev) => ({
@@ -160,7 +163,7 @@ export const NumaTimer = ({
               fontSize: "14px",
               color: theme.subText
             }}>
-            この時間はもう戻りません
+            {reminderMessage}
           </div>
         </>
       )}
