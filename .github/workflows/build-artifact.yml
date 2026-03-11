@@ -6,58 +6,13 @@ on:
   push:
     branches:
       - main
-  release:
-    types:
-      - published
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    outputs:
-      zip_name: ${{ steps.meta.outputs.zip_name }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.12.2
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build extension
-        run: pnpm build
-
-      - name: Package extension zip
-        run: pnpm package
-
-      - name: Prepare versioned zip name
-        id: meta
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          SHORT_SHA="${GITHUB_SHA::7}"
-          ZIP_NAME="numa-timer-v${VERSION}-${SHORT_SHA}.zip"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "zip_name=${ZIP_NAME}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.meta.outputs.zip_name }}
-          path: build/chrome-mv3-prod.zip
-          if-no-files-found: error
-          retention-days: 14
+    uses: ./.github/workflows/build-extension.yml
 
   publish-main-latest:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -89,26 +44,3 @@ jobs:
             Commit: `${{ github.sha }}`
           files: dist/numa-timer-main-latest.zip
           overwrite_files: true
-
-  publish-release:
-    if: github.event_name == 'release'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.zip_name }}
-          path: dist
-
-      - name: Prepare release asset name
-        run: |
-          mv dist/chrome-mv3-prod.zip "dist/${{ needs.build.outputs.zip_name }}"
-
-      - name: Upload release asset
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.release.tag_name }}
-          files: dist/${{ needs.build.outputs.zip_name }}
