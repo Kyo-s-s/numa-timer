@@ -1,0 +1,9 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "numa-timer",
+      "bump-minor-pre-major": true
+    }
+  }
+}
